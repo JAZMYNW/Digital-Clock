@@ -1,8 +1,22 @@
 `timescale 1ns / 1ps
 ///////////////////////////////////////////////////////////////////////
-// Authored by 
-//
-// Purpose: 
+// Company: 
+// Engineer: 
+// 
+// Create Date: 12/05/2022 05:02:14 PM
+// Design Name: 
+// Module Name: countdown_timer
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
 ///////////////////////////////////////////////////////////////////////
 
 module pixel_clk_gen(

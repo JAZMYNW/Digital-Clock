@@ -1,10 +1,22 @@
 `timescale 1ns /1ps
 ///////////////////////////////////////////////////////////////////
-// Authored by David J. Marion aka FPGA Dude
-// Created on 4/11/2022
-//
-// Description: ROM containing 8x16 ascii characters 0-9 and :
-// for the VGA Clock
+// Company: 
+// Engineer: 
+// 
+// Create Date: 12/05/2022 05:02:14 PM
+// Design Name: 
+// Module Name: countdown_timer
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
 ///////////////////////////////////////////////////////////////////
 
 module digits(

@@ -22,7 +22,6 @@
 module pixel_clk_gen(
     input clk,
     input video_on,
-    //input tick_1Hz,       // use signal if blinking colon(s) is desired
     input [9:0] x, y,
     input [3:0] sec_1s, sec_10s,
     input [3:0] min_1s, min_10s,
@@ -158,7 +157,7 @@ module pixel_clk_gen(
         
     // Mux for ROM Addresses and RGB    
     always @* begin
-        time_rgb = 12'h222;             // black background
+        time_rgb = 12'h000;             // black background
         if(H10_on) begin
             char_addr = char_addr_h10;
             row_addr = row_addr_h10;

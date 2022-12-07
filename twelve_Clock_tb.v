@@ -13,7 +13,7 @@ reg clk, reset, setTime;
    
    
    always begin
-        #100000000  clk = ~clk;
+        #500000000  clk = ~clk;
     end
     
     initial begin

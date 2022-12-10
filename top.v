@@ -1,11 +1,8 @@
 module top(
-    input clk_100MHz,       // 100MHz on Basys 3
-    input reset,            // btnC
+    input clk,       // 100MHz on Basys 3
+    input reset_n,            // btnC
     input tick_hr,          // btnL
     input tick_min,         // btnR
-    input tick_sec,
-    input modeselect,
-    input ss,
     output hsync,           // to VGA Connector
     output vsync,           // to VGA Connector
     output [11:0] rgb       // to DAC, to VGA Connector
@@ -19,10 +16,11 @@ module top(
     wire [11:0] rgb_next;
     
     // Instantiate Modules
-    vga_controller vga(
-        .clk_100MHz(clk_100MHz),
+    vga640x480 vga(
+        .clk(clk),
         .reset(reset),
-        .hsync(hsync),      
+        .video_on(video_on),
+        .hsync(hsync),
         .vsync(vsync),
         .p_tick(p_tick),
         .x(w_x),
@@ -43,10 +41,10 @@ module top(
         .hr_10s(hr_10s)
         );
 
-    pixel_clk_gen pclk(
-        .clk(clk_100MHz),
+    display disp(
+        .clk(clk),
         .video_on(video_on),
-        //.tick_1Hz(),
+
         .x(w_x),
         .y(w_y),
         .sec_1s(sec_1s),
@@ -59,7 +57,7 @@ module top(
         );
  
     // rgb buffer
-    always @(posedge clk_100MHz)
+    always @(posedge clk)
         if(p_tick)
             rgb_reg <= rgb_next;
             

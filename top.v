@@ -4,7 +4,7 @@ module top(
     input tick_hr,          // btnL
     input tick_min,         // btnR
     input tick_sec,
-    input inc,
+    input modeselect,
     input ss,
     output hsync,           // to VGA Connector
     output vsync,           // to VGA Connector

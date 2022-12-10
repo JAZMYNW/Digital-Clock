@@ -4,7 +4,7 @@
 
 //////////////////////////////////////////////////////////////////////////////////
 
-module vga_controller(
+module vga640x480(
     input clk_100MHz,   // from Basys 3
     input reset,        // system reset
     output video_on,    // ON while pixel counts for x and y and within display area

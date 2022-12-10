@@ -2,7 +2,7 @@
 
 module tobcd(
 	input [5:0] hour, min, sec, 
-		output reg [5:0] hour10, hour1, min10, min1, sec10, sec1
+	output reg [3:0] hour10, hour1, min10, min1, sec10, sec1
     );
     
 

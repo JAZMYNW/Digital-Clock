@@ -1,76 +1,105 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
 // 
-// Create Date: 11/21/2020 12:28:07 PM
-// Design Name: 
-// Module Name: vga640x480
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
+
 //////////////////////////////////////////////////////////////////////////////////
 
-
-module vga640x480(
-    input wire i_clk,           // base clock
-    input wire i_pix_stb,       // pixel clock strobe
-    input wire i_rst,           // reset: restarts frame
-    output wire o_hs,           // horizontal sync
-    output wire o_vs,           // vertical sync
-    output wire [9:0] o_x,      // current pixel x position
-    output wire [8:0] o_y       // current pixel y position
+module vga_controller(
+    input clk_100MHz,   // from Basys 3
+    input reset,        // system reset
+    output video_on,    // ON while pixel counts for x and y and within display area
+    output hsync,       // horizontal sync
+    output vsync,       // vertical sync
+    output p_tick,      // the 25MHz pixel/second rate signal, pixel tick
+    output [9:0] x,     // pixel count/position of pixel x, max 0-799
+    output [9:0] y      // pixel count/position of pixel y, max 0-524
     );
-
-   
-    localparam HS_STA = 16;              // horizontal sync start
-    localparam HS_END = 16 + 96;         // horizontal sync end
-    localparam HA_STA = 16 + 96 + 48;    // horizontal active pixel start
-    localparam VS_STA = 480 + 10;        // vertical sync start
-    localparam VS_END = 480 + 10 + 2;    // vertical sync end
-    localparam VA_END = 480;             // vertical active pixel end
-    localparam LINE   = 800;             // complete line (pixels)
-    localparam SCREEN = 525;             // complete screen (lines)
-
-    reg [9:0] h_count;  // line position
-    reg [9:0] v_count;  // screen position
-
-    // generate sync signals (active low for 640x480)
-    assign o_hs = ~((h_count >= HS_STA) & (h_count < HS_END));
-    assign o_vs = ~((v_count >= VS_STA) & (v_count < VS_END));
-
-    // keep x and y bound within the active pixels
-    assign o_x = (h_count < HA_STA) ? 0 : (h_count - HA_STA);
-    assign o_y = (v_count >= VA_END) ? (VA_END - 1) : (v_count);
-
-
-    always @ (posedge i_clk)
-    begin
-        if (i_rst)  // reset to start of frame
-        begin
-            h_count <= 0;
-            v_count <= 0;
+    
+    // Based on VGA standards found at vesa.org for 640x480 resolution
+    // Total horizontal width of screen = 800 pixels, partitioned  into sections
+    parameter HD = 640;             // horizontal display area width in pixels
+    parameter HF = 48;              // horizontal front porch width in pixels
+    parameter HB = 16;              // horizontal back porch width in pixels
+    parameter HR = 96;              // horizontal retrace width in pixels
+    parameter HMAX = HD+HF+HB+HR-1; // max value of horizontal counter = 799
+    // Total vertical length of screen = 525 pixels, partitioned into sections
+    parameter VD = 480;             // vertical display area length in pixels 
+    parameter VF = 10;              // vertical front porch length in pixels  
+    parameter VB = 33;              // vertical back porch length in pixels   
+    parameter VR = 2;               // vertical retrace length in pixels  
+    parameter VMAX = VD+VF+VB+VR-1; // max value of vertical counter = 524   
+    
+    // *** Generate 25MHz from 100MHz *********************************************************
+	reg  [1:0] r_25MHz;
+	wire w_25MHz;
+	
+	always @(posedge clk_100MHz or posedge reset)
+		if(reset)
+		  r_25MHz <= 0;
+		else
+		  r_25MHz <= r_25MHz + 1;
+	
+	assign w_25MHz = (r_25MHz == 0) ? 1 : 0; // assert tick 1/4 of the time
+    // ****************************************************************************************
+    
+    // Counter Registers, two each for buffering to avoid glitches
+    reg [9:0] h_count_reg, h_count_next;
+    reg [9:0] v_count_reg, v_count_next;
+    
+    // Output Buffers
+    reg v_sync_reg, h_sync_reg;
+    wire v_sync_next, h_sync_next;
+    
+    // Register Control
+    always @(posedge clk_100MHz or posedge reset)
+        if(reset) begin
+            v_count_reg <= 0;
+            h_count_reg <= 0;
+            v_sync_reg  <= 1'b0;
+            h_sync_reg  <= 1'b0;
         end
-        if (i_pix_stb)  // once per pixel
-        begin
-            if (h_count == LINE)  // end of line
-            begin
-                h_count <= 0;
-                v_count <= v_count + 1;
-            end
-            else 
-                h_count <= h_count + 1;
-
-            if (v_count == SCREEN)  // end of screen
-                v_count <= 0;
+        else begin
+            v_count_reg <= v_count_next;
+            h_count_reg <= h_count_next;
+            v_sync_reg  <= v_sync_next;
+            h_sync_reg  <= h_sync_next;
         end
-    end
+         
+    //Logic for horizontal counter
+    always @(posedge w_25MHz or posedge reset)      // pixel tick
+        if(reset)
+            h_count_next = 0;
+        else
+            if(h_count_reg == HMAX)                 // end of horizontal scan
+                h_count_next = 0;
+            else
+                h_count_next = h_count_reg + 1;         
+  
+    // Logic for vertical counter
+    always @(posedge w_25MHz or posedge reset)
+        if(reset)
+            v_count_next = 0;
+        else
+            if(h_count_reg == HMAX)                 // end of horizontal scan
+                if((v_count_reg == VMAX))           // end of vertical scan
+                    v_count_next = 0;
+                else
+                    v_count_next = v_count_reg + 1;
+        
+    // h_sync_next asserted within the horizontal retrace area
+    assign h_sync_next = (h_count_reg >= (HD+HB) && h_count_reg <= (HD+HB+HR-1));
+    
+    // v_sync_next asserted within the vertical retrace area
+    assign v_sync_next = (v_count_reg >= (VD+VB) && v_count_reg <= (VD+VB+VR-1));
+    
+    // Video ON/OFF - only ON while pixel counts are within the display area
+    assign video_on = (h_count_reg < HD) && (v_count_reg < VD); // 0-639 and 0-479 respectively
+            
+    // Outputs
+    assign hsync  = h_sync_reg;
+    assign vsync  = v_sync_reg;
+    assign x      = h_count_reg;
+    assign y      = v_count_reg;
+    assign p_tick = w_25MHz;
+            
 endmodule

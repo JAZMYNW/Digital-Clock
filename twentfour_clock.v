@@ -1,33 +1,14 @@
-`timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 12/07/2022 04:57:20 PM
-// Design Name: 
-// Module Name: twentfour_clock
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-
-
-module twentfour_clock(reset, clk, setTime, setHour, setMin, setSec, hour, min, sec);
-    input reset, clk, setTime;
-    input [4:0] setHour;
-    input [5:0] setMin;
-    input [5:0] setSec;
+module twentfour_clock(reset, clk, hour, min, sec);
+    input reset, clk;
     output reg [4:0] hour;
     output reg [5:0] min;
     output reg [5:0] sec;
+    
+    
+    reg setTime = 1; 
+    reg setHour = 23; 
+    reg setMin = 59; 
+    reg setSec = 59;
     
     always@(posedge clk or posedge setTime or posedge reset)
     begin
@@ -66,4 +47,3 @@ module twentfour_clock(reset, clk, setTime, setHour, setMin, setSec, hour, min, 
             end
     end
 endmodule
-
